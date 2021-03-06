@@ -1,0 +1,76 @@
+---
+title: "Model Validation Assignment"
+author: "sabina jamarkattel"
+date: "2/2/2021"
+output: word_document
+---
+ 
+```{r}
+library(tidyselect)
+library(tidymodels)
+library(lubridate)
+```
+```{r}
+
+bike<-bike_cleaned_2 <- read_csv("C:/Users/Sabina/Desktop/BAN502 PREDICTIVE ANALYTICS/MODULE 3/ASSIGNMNET 1/bike_cleaned-2.csv")
+bike = bike %>% mutate(dteday = mdy(dteday)) 
+bike = bike %>% mutate_if(is.character,as.factor)
+bike = bike %>% mutate(hr = as.factor(hr))
+str(bike)
+
+```
+# Task 1
+```{r}
+set.seed(1234)
+bike_split = initial_split(bike, prob = 0.70, strata = count)
+train = training(bike_split)
+test = testing(bike_split)
+
+```
+
+# Task 2
+#  How many rows of data are in each set :- Train has 13036 rows and Test has 4343 rows.
+ 
+
+
+ # Task 3 
+```{r}
+bike_recipe = recipe(count ~ season +hr+holiday+weekday+temp+mnth+weathersit ,  train)
+
+lm_model = 
+  linear_reg() %>% 
+  set_engine("lm")
+
+lm_wflow = 
+  workflow() %>% 
+  add_model(lm_model) %>% 
+  add_recipe(bike_recipe)
+
+lm_fit = fit(lm_wflow, train)
+```
+```{r}
+summary(lm_fit$fit$fit$fit)
+```
+# The Adjusted R-squared value is 0.0622.
+
+
+#Task 4
+```{r}
+predict_train = predict(lm_fit,train)
+
+ggplot(predict_train ,aes(x=.pred)) +
+geom_histogram() +
+  theme_bw()
+
+```
+# FRom the histogram above we can see that, the value of variable .pred between 0-300 is more concentrated and also the maximum count  is around 300.
+
+
+
+#Task5
+```{r}
+lm_fit %>% predict(test) %>% bind_cols(test) %>% metrics(truth = count, estimate = ".pred")
+```
+
+
+# Perfomance on the test set is similar to that on the training set.So,this suggests that there is not much difference in the R-squared value and our model is not overfitting,hence making a good model.
